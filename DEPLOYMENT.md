@@ -202,3 +202,12 @@ bash film_notify_bot.sh
    * 禁止未经同意的群发消息，避免骚扰。
    * 请勿将本项目用于任何违法、违规或滥用目的。
 
+
+---
+
+<div align="center">
+
+**蒙太奇字幕组 (MontageSubs)**  
+“用爱发电 ❤️ Powered by love”
+
+</div>
