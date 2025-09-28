@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Name: film_notify_bot.sh
-# Version: 1.8.3
+# Version: 1.8.4
 # Organization: MontageSubs (蒙太奇字幕组)
 # Contributors: Meow P (小p)
 # License: MIT License
@@ -52,12 +52,12 @@
 # In GitHub Actions, do NOT modify this section directly.
 # All variables should be provided via repository Secrets.
 # Please add them in the repository settings under "Secrets and variables".
-MDBLIST_API_KEY="${MDBLIST_API_KEY}"       # MDBList API Key
-MDBLIST_LIST_ID="${MDBLIST_LIST_ID}"       # Watchlist ID / 监控列表 ID
-TMDB_API_KEY="${TMDB_API_KEY}"             # TMDB API Key
-TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN}" # Telegram Bot Token
-TELEGRAM_CHAT_IDS="${TELEGRAM_CHAT_IDS}"   # Target chat IDs (space separated) / 目标聊天 ID，可多个用空格分隔
-BUTTON_URL="${TELEGRAM_BUTTON_URL}"        # Telegram Button URL / Telegram 按钮链接
+MDBLIST_API_KEY="${MDBLIST_API_KEY}"            # MDBList API Key
+MDBLIST_LIST_ID="${MDBLIST_LIST_ID}"            # Watchlist ID / 监控列表 ID
+TMDB_API_KEY="${TMDB_API_KEY}"                  # TMDB API Key
+TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN}"      # Telegram Bot Token
+TELEGRAM_CHAT_IDS="${TELEGRAM_CHAT_IDS}"        # Target chat IDs (space separated) / 目标聊天 ID，可多个用空格分隔
+TELEGRAM_BUTTON_URL="${TELEGRAM_BUTTON_URL}"    # Telegram Button URL (Optional) / Telegram 按钮链接（可选）
 
 # ---------------- 配置 / Configuration ----------------
 # 脚本所在目录 / Script directory
@@ -257,17 +257,19 @@ format_score() {
 
 send_telegram() {
     MSG="$1"
-    BUTTONS_JSON="$(jq -n --arg url "$BUTTON_URL" '{
-        inline_keyboard: [[{text: "新片推荐", url: $url}]]
-    }')"
-
-    MSG_ESCAPED=$(jq -R -s <<< "$MSG")
+    MSG_ESCAPED="$(jq -R -s <<< "$MSG")"
 
     for CHAT_ID in $TELEGRAM_CHAT_IDS; do
-        if [ -n "$CHAT_ID" ]; then
+        [ -z "$CHAT_ID" ] && continue
+        if [ -n "$TELEGRAM_BUTTON_URL" ]; then
+            BUTTONS_JSON="$(jq -n --arg url "$TELEGRAM_BUTTON_URL" '{inline_keyboard: [[{text: "新片推荐", url: $url}]]}')"
             curl -s -A "$UA_STRING" -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
                 -H "Content-Type: application/json" \
                 -d "{\"chat_id\":$CHAT_ID,\"text\":$MSG_ESCAPED,\"parse_mode\":\"HTML\",\"reply_markup\":$BUTTONS_JSON}" >/dev/null
+        else
+            curl -s -A "$UA_STRING" -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                -H "Content-Type: application/json" \
+                -d "{\"chat_id\":$CHAT_ID,\"text\":$MSG_ESCAPED,\"parse_mode\":\"HTML\"}" >/dev/null
         fi
     done
 }
@@ -366,9 +368,8 @@ get_ratings() {
 }
 
 # ---------------- 消息生成与发送 / Message Generation and Sending ----------------
-# Function: generate_and_send_msg
 # 功能：生成电影信息的完整消息，并发送到 Telegram
-# Description: Generate a complete message containing movie details and send it via Telegram
+# Function: Generate a complete message containing movie details and send it via Telegram
 generate_and_send_msg() {
     # 获取中文和英文电影标题 / Get movie titles in Chinese and English
     TITLE_CN="$(echo "$TMDB_JSON" | jq -r '.title')"
@@ -552,9 +553,9 @@ clean_old_dedup() {
 }
 
 # ---------------- 主流程 / Main Flow ----------------
-# Get script version from header / 从脚本头部获取版本号
+# 从脚本头部获取版本号 / Get script version from header
 VERSION="$(grep -m1 '^# Version:' "$0" | awk '{print $3}')"
-# Set SOURCE_URL and UA_STRING dynamically based on environment / 根据运行环境动态设置 Source 和 UserAgent
+# 根据运行环境动态设置 Source 和 UserAgent / Set SOURCE_URL and UA_STRING dynamically based on environment
 if [ -n "$GITHUB_REPOSITORY" ]; then
     SOURCE_URL="https://github.com/${GITHUB_REPOSITORY}"
     UA_STRING="film_notify_bot/$VERSION (+$SOURCE_URL; GitHub Actions)"
