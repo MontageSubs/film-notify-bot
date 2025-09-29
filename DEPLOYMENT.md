@@ -189,14 +189,14 @@ bash film_notify_bot.sh
 
    * 免费账号每日请求上限 1000 次，足以支持本项目常规使用。
    * 若超过 90 天未登录，列表更新可能暂停；超过 120 天未登录，账号可能被终止。
-
-2. **TMDB**
-
-   * Developer API 禁止用于商业用途，如需商业授权请联系 TMDB。
-
-3. **支持 MDBList**
+  
+2. **支持 MDBList**
 
    * 若希望服务持续运行，建议按官方方式赞助 MDBList（ https://docs.mdblist.com/docs/supporter ）。
+
+3. **TMDB**
+
+   * Developer API 禁止用于商业用途，如需商业授权请联系 TMDB。
 
 4. **滥用警告**
 
