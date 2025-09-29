@@ -2,9 +2,15 @@
 
 **中文 | [English](./DEPLOYMENT.en.md)**
 
+
+
+
 ## 说明
 
 本文档为 Film Notify Bot 的完整部署说明。涵盖：前期准备、在 GitHub Actions 上运行、在本地或私有服务器部署，以及一些建议。
+
+
+
 
 ## 目录
 
@@ -18,11 +24,17 @@
 8. [第 4 部分 本地 / 私有服务器部署](#第-4-部分-本地--私有服务器部署)
 9. [注意事项与常见问题汇总](#注意事项与常见问题汇总)
 
+
+
+
 ## 适用读者
 
 **适用读者**：具备基本命令行、GitHub 使用经验的开发者与运维人员。初学者亦可跟随本指南完成部署。
 
 **预估时间**：准备 Key 与列表（15–60 分钟）；GitHub Actions 配置（10–30 分钟）；本地部署（10–20 分钟）。
+
+
+
 
 ## 先决条件与术语
 
@@ -34,12 +46,18 @@
 * **API Key / Token**：服务方发放的一串字符，用来证明请求者身份（例如 MDBList、TMDB、Telegram Bot Toke）。应把它当作密码来保护。
 * **Film Notify Bot**：自动检查 MDBList / TMDB 列表并将新影片通过 Telegram 推送到指定聊天的程序。详情参见 [README.md（说明文件）](./README.md)。
 
+
+
+
 ## 步骤预览
 
 1. 在 MDBList 创建并填充列表（等待 30–60 分钟）。
 2. 获取 MDBList API Key、列表 ID、TMDB API Key、Telegram Bot Token 与 Chat ID。
 3. Fork 仓库 → 添加 Secrets → 删除 `scripts/sent_tmdb_ids.txt`。
 4. 手动触发 Actions 或等待定时任务，确认消息成功推送。
+
+
+
 
 ## 第 1 部分 在 MDBList 上创建自定义列表
 
@@ -55,6 +73,10 @@
    * 根据需要添加语言、地区或平台过滤
 3. 点击 **Search** 查看结果，确认规则后点击 **Create List** 创建列表。
 4. 等待 30–60 分钟，列表填充完成后即可使用。
+
+
+
+
 
 ## 第 2 部分 获取所需 Key 与 ID
 
@@ -115,6 +137,10 @@ curl -s -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage" \
 
 若发送失败，请确认 Bot 已加入对话并具有权限。
 
+
+
+
+
 ## 部署前检查清单
 
 * [ ] 已在 MDBList 创建并填充列表
@@ -123,6 +149,10 @@ curl -s -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage" \
 * [ ] TMDB API Key 已生成并保存
 * [ ] Telegram Bot 已创建并保存 Token
 * [ ] 目标 Chat ID 已获取（支持多个）
+
+
+
+
 
 ## 第 3 部分 在 GitHub Actions 上部署（推荐）
 
@@ -145,7 +175,13 @@ curl -s -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage" \
 
 在 GitHub Actions 环境中，**不要**将 API Key 或 Bot Token 写入代码库，所有敏感信息必须放入 Secrets。
 
+
+
+
+
 ## 第 4 部分 本地 / 私有服务器部署
+
+> 这一步骤仅在你不使用 GitHub Actions 并希望在本地或自己的服务器上托管时才需要。
 
 1. **系统依赖**
 
@@ -187,6 +223,10 @@ bash film_notify_bot.sh
 
    * 请在目标主机上为脚本设置定时任务以实现定期运行。不同操作系统和调度工具配置方式不同（如 systemd timers、cron、launchd 等），此处不赘述具体命令。  
    * 推荐周期：每 6 小时运行一次，且尽量避开整点（例如 `02:43`、`08:13`、`14:43`、`20:13`），以降低高峰请求冲突。
+
+
+
+
 
 
 ## 注意事项与常见问题汇总
