@@ -133,7 +133,7 @@ curl -s -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage" \
    * `MDBLIST_LIST_ID`
    * `TMDB_API_KEY`
    * `TELEGRAM_BOT_TOKEN`
-   * `TELEGRAM_CHAT_IDS`（多个用空格分隔，并在 Secrets 中用引号包裹，如 `"12345 67890 -100112233"`）
+   * `TELEGRAM_CHAT_IDS`（多个用空格分隔，如 `12345 67890 -100112233`）
    * `TELEGRAM_BUTTON_URL`（可选，Bot 消息按钮链接）
 3. **清理去重文件**：删除或清空 [`scripts/sent_tmdb_ids.txt`](./scripts/sent_tmdb_ids.txt)，避免跳过推送。
 4. **（可选）修改 [`README.md`](./README.md)**：调整状态徽章为你自己的仓库路径。
