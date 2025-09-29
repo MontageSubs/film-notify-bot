@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Name: film_notify_bot.sh
-# Version: 1.9.2
+# Version: 1.9.3
 # Organization: MontageSubs (蒙太奇字幕组)
 # Contributors: Meow P (小p)
 # License: MIT License
@@ -423,7 +423,7 @@ generate_and_send_msg() {
 
     # 构造标题显示 / Build display title
     if [ -n "$TITLE_CN" ] && [ "$TITLE_CN" != "null" ]; then
-        DISPLAY_TITLE="《$TITLE_CN（$TITLE_EN）》"
+        DISPLAY_TITLE="《$TITLE_CN ($TITLE_EN)》"
     else
         DISPLAY_TITLE="$TITLE_EN"
     fi
@@ -579,7 +579,7 @@ generate_and_send_msg() {
     fi
 
     # 将所有信息拼接为一条消息 / Combine all info into one message
-    MSG="$DISPLAY_TITLE（$RELEASE_YEAR） $RELEASE_STATUS
+    MSG="$DISPLAY_TITLE ($RELEASE_YEAR)  $RELEASE_STATUS
 
 简介：$OVERVIEW
 
