@@ -144,7 +144,7 @@ curl -s -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage" \
 
 ### Security Reminder
 
-Never write API Keys or Bot Tokens into the code repository. Only store them in GitHub Actions secrets or other secure environments. Protect file permissions when storing locally.
+Never write API Keys or Bot Tokens into the code repository. Only store them in GitHub Actions secrets or other secure environments.
 
 ## Part 4: Local / Private Server Deployment
 
