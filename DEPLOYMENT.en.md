@@ -6,7 +6,11 @@
 
 ## Overview
 
-This document provides a complete deployment guide for Film Notify Bot, including preparation, running on GitHub Actions, deploying on local or private servers, and best practices.
+This document provides a complete deployment guide for Film Notify Bot, including preparation, running on GitHub Actions or deploying on local or private servers, and best practices.
+
+
+
+
 
 ## Table of Contents
 
@@ -20,10 +24,18 @@ This document provides a complete deployment guide for Film Notify Bot, includin
 8. [Part 4: Local / Private Server Deployment](#part-4-local--private-server-deployment)
 9. [Important Notes & Common Issues](#important-notes--common-issues)
 
+
+
+
+
 ## Intended Audience
 
 * Developers or operators with basic command line and GitHub experience. Beginners can also follow this guide.
-* Estimated time: 15–60 minutes for key and list preparation; 10–30 minutes for GitHub Actions setup; 10–20 minutes for local deployment.
+* Estimated time: 15–60 minutes for key and list preparation; 10–30 minutes for GitHub Actions setup or 10–20 minutes for local deployment.
+
+
+
+
 
 ## Prerequisites & Terminology
 
@@ -35,12 +47,20 @@ This document provides a complete deployment guide for Film Notify Bot, includin
 * **API Key / Token**: Credentials used to authenticate requests to services (MDBList, TMDB, Telegram). These are sensitive credentials and should be protected like passwords.
 * **Film Notify Bot**: Automatically checks MDBList/TMDB lists and pushes new movie notifications via Telegram. See [README.en.md](./README.en.md) for details.
 
+
+
+
+
 ## Deployment Steps Overview
 
 1. Create and populate custom list on MDBList (wait 30–60 minutes).
-2. Obtain MDBList API Key, list ID, TMDB API Key, Telegram Bot Token, and Chat ID.
-3. Fork repository → Add Secrets → Delete `scripts/sent_tmdb_ids.txt`.
+2. Obtain MDBList API Key, list ID, TMDB API Key, Telegram Bot Token, and Chat ID(s).
+3. Fork repository → Add Secrets → Delete or empty  `scripts/sent_tmdb_ids.txt`.
 4. Manually trigger Actions or wait for scheduled runs; confirm successful message delivery.
+
+
+
+
 
 ## Part 1: Create Custom Lists on MDBList
 
@@ -56,6 +76,10 @@ This document provides a complete deployment guide for Film Notify Bot, includin
    * Optional filters: language, region, platform, cast, etc.
 3. Click **Search** to preview results; confirm rules, then click **Create List**.
 4. Wait 30–60 minutes for the list to populate before use.
+
+
+
+
 
 ## Part 2: Obtain Required Keys and IDs
 
@@ -91,7 +115,7 @@ https://api.mdblist.com/lists/user/<USER_ID>?apikey=<API Key>
 ```text
 https://api.themoviedb.org/3/configuration?api_key=<API Key>
 ```
-
+If no error appears, the key is valid.  
 > TMDB Developer API is not for commercial use. Contact TMDB for commercial authorization.
 
 ### Telegram Bot Token & Chat ID
@@ -115,6 +139,10 @@ curl -s -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage" \
   -d chat_id="<CHAT_ID>" -d text="Film Notify Bot test message"
 ```
 
+
+
+
+
 ## Pre-deployment Checklist
 
 * [ ] MDBList list created and populated
@@ -123,6 +151,10 @@ curl -s -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage" \
 * [ ] TMDB API Key saved
 * [ ] Telegram Bot Token saved
 * [ ] Target Chat ID obtained (supports multiple)
+
+
+
+
 
 ## Part 3: Deploy on GitHub Actions (Recommended)
 
@@ -146,7 +178,13 @@ curl -s -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage" \
 
 Never write API Keys or Bot Tokens into the code repository. Only store them in GitHub Actions secrets or other secure environments.
 
+
+
+
+
 ## Part 4: Local / Private Server Deployment
+
+> This step is only necessary if you're not using GitHub Actions and wish to host it locally or on your own server.
 
 1. **System dependencies**
 
@@ -185,7 +223,11 @@ bash film_notify_bot.sh
 5. **Set up scheduled tasks**
 
    * Schedule the script to run regularly on your host (cron, systemd timers, launchd, etc.).
-   * Recommended: every 6 hours, avoiding exact hour marks (e.g., 02:43, 08:13, 14:43, 20:13) to reduce API server load.
+   * Recommended: every 6 hours, avoiding exact hour marks (e.g., `02:43`, `08:13`, `14:43`, `20:13`) to reduce API server load.
+
+
+
+
 
 ## Important Notes & Common Issues
 
