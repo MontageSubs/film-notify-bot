@@ -181,7 +181,7 @@ curl -s -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage" \
 
 ## 第 4 部分 本地 / 私有服务器部署
 
-> 这一步骤仅在你不使用 GitHub Actions 并希望在本地或自己的服务器上托管时才需要。
+> 这一部分仅在你不使用 GitHub Actions 并希望在本地或自己的服务器上托管时才需要。
 
 1. **系统依赖**
 
