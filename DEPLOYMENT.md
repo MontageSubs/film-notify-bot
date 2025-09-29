@@ -194,9 +194,9 @@ bash film_notify_bot.sh
 
    * Developer API 禁止用于商业用途，如需商业授权请联系 TMDB。
 
-3. **支持 MDBList 和 TMDB**
+3. **支持 MDBList**
 
-   * 若希望服务持续运行，建议按官方方式赞助 MDBList 与 TMDB。
+   * 若希望服务持续运行，建议按官方方式赞助 MDBList（ https://docs.mdblist.com/docs/supporter ）。
 
 4. **滥用警告**
 
