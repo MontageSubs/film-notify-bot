@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Name: film_notify_bot.sh
-# Version: 1.9.1
+# Version: 1.9.2
 # Organization: MontageSubs (蒙太奇字幕组)
 # Contributors: Meow P (小p)
 # License: MIT License
@@ -43,7 +43,7 @@
 #   - Updates 'sent_tmdb_ids.txt' with already processed movie IDs
 #     格式化电影消息打印到 stdout（或通过 Telegram 发送）
 #     更新 'sent_tmdb_ids.txt' 文件，记录已处理的电影 ID
-
+#----------------------------------------------------------------------
 # ---------------- API Key 与列表 ID / API Keys and IDs ----------------
 # 警告 / WARNING
 # 在 GitHub Actions 中，请勿直接修改此段。
@@ -256,30 +256,32 @@ format_score() {
     fi
 }
 
-# 功能: 格式化评分，支持不同来源
-# Function: Format score according to provider
+# 功能: 格式化评分数量，支持不同来源
+# Function: Format rating count according to provider
 format_count() {
-    if [ -z "$1" ] || [ "$1" = "N/A" ]; then
-        echo "暂无"
-    else
-        echo "$1" | awk '{
-            n = $0
-            if(n == "") { print "0"; exit }
-            sign = ""
-            if(n ~ /^-/) { sign = "-"; n = substr(n, 2) }
+    local count="$1"
 
-            split(n, parts, ".")
-            intpart = parts[1]
-            fracpart = (length(parts) > 1) ? "." parts[2] : ""
-
-            s = ""
-            while(length(intpart) > 3) {
-                s = "," substr(intpart, length(intpart)-2, 3) s
-                intpart = substr(intpart, 1, length(intpart)-3)
-            }
-            print sign intpart s fracpart
-        }'
+    if [ -z "$count" ] || [ "$count" = "N/A" ] || [ "$count" = "null" ]; then
+        echo ""
+        return
     fi
+
+    formatted=$(echo "$count" | awk '{
+        n = $0
+        sign = ""
+        if(n ~ /^-/){ sign = "-"; n = substr(n,2) }
+        split(n, parts, ".")
+        intpart = parts[1]
+        fracpart = (length(parts) > 1) ? "." parts[2] : ""
+        s = ""
+        while(length(intpart) > 3){
+            s = "," substr(intpart,length(intpart)-2,3) s
+            intpart = substr(intpart,1,length(intpart)-3)
+        }
+        print sign intpart s fracpart
+    }')
+
+    echo "($formatted) "
 }
 
 # 功能: 发送消息到 Telegram，支持可选按钮
@@ -592,8 +594,8 @@ generate_and_send_msg() {
 在线发行：$ONLINE_STREAMS
 
 综合评分：$AVG_SCORE
-网友评分：IMDb $RATING_IMDB ($RATING_IMDB_COUNT) | Letterboxd $RATING_LETTERBOXD ($RATING_LETTERBOXD_COUNT)
-专业评分：Metacritic $RATING_METACRITIC ($RATING_METACRITIC_COUNT) | Rotten Tomatoes $RATING_ROTTEN ($RATING_ROTTEN_COUNT) | RogerEbert $RATING_ROGEREBERT
+网友评分：IMDb $RATING_IMDB $RATING_IMDB_COUNT| Letterboxd $RATING_LETTERBOXD $RATING_LETTERBOXD_COUNT
+专业评分：Metacritic $RATING_METACRITIC $RATING_METACRITIC_COUNT| Rotten Tomatoes $RATING_ROTTEN $RATING_ROTTEN_COUNT| RogerEbert $RATING_ROGEREBERT
 
 外部资料：$DB_URL
 $TAGS"
