@@ -30,6 +30,9 @@
 * **TMDB**：The Movie Database，用于补充影片元数据（时长、海报、简介等）。
 * **Telegram Bot**：用于把通知发送到群组或频道的 Bot（机器人）。
 * **sent_tmdb_ids.txt**：记录已发送的电影 ID，避免重复通知。
+* **GitHub Actions**：GitHub 的云端任务运行服务，可定时或手动触发脚本。
+* **API Key / Token**：服务方发放的一串字符，用来证明请求者身份（例如 MDBList、TMDB、Telegram Bot Toke）。应把它当作密码来保护。
+* **Film Notify Bot**：自动检查 MDBList / TMDB 列表并将新影片通过 Telegram 推送到指定聊天的程序。详情参见 [README.md（说明文件）](./README.md)。
 
 ## 步骤预览
 
@@ -201,6 +204,14 @@ bash film_notify_bot.sh
    * 禁止对 GitHub 的滥用，必须遵守 GitHub 条款。
    * 禁止未经同意的群发消息，避免骚扰。
    * 请勿将本项目用于任何违法、违规或滥用目的。
+
+5. **User-Agent 与运行环境信息**
+
+   * Bot 在向第三方 API 发出请求时会在请求头带上程序版本与运行环境信息，示例格式：  
+     `User-Agent: film_notify_bot/1.8.4 (+https://github.com/MontageSubs/film-notify-bot; GitHub Actions)`
+   * 在 GitHub Actions 上运行时会标注为 “GitHub Actions” 和来源仓库地址；在本地或私有服务器运行时会包含操作系统与版本信息（例如 `Ubuntu-22.04` 或 `Darwin-23.0.0`）。
+   * 目的与责任：此信息用于便于 API 提供者识别流量并协助排查问题。请遵守目标服务的使用条款并负责任地使用，我们对 MDBList、TMDB 等服务表示衷心感谢。
+
 
 
 ---
