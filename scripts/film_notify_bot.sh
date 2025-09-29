@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Name: film_notify_bot.sh
-# Version: 1.8.4
+# Version: 1.9
 # Organization: MontageSubs (蒙太奇字幕组)
 # Contributors: Meow P (小p)
 # License: MIT License
@@ -249,6 +249,7 @@ format_score() {
             letterboxd) echo "$SCORE / 5" ;;
             metacritic) echo "$SCORE / 100" ;;
             rogerebert) echo "$SCORE / 4" ;;
+            rotten) echo "$SCORE / 100" ;;
             avg) echo "$SCORE / 100" ;;
             *) echo "$SCORE" ;;
         esac
@@ -333,6 +334,17 @@ get_movie_list() {
     MOVIE_ITEMS_JSON=$(curl -s -A "$UA_STRING" "https://api.mdblist.com/lists/${MDBLIST_LIST_ID}/items?apikey=${MDBLIST_API_KEY}&format=json&limit=100&order=asc&sort=releasedigital&unified=true")
 }
 
+get_mdb_movie_info() {
+    TMDB_ID="$1"
+    MDB_MOVIE_JSON=""
+    MDB_MOVIE_JSON=$(curl -s -A "$UA_STRING" \
+        "https://api.mdblist.com/tmdb/movie/${TMDB_ID}?apikey=${MDBLIST_API_KEY}&append_to_response=keyword&format=json")
+    if [ -z "$MDB_MOVIE_JSON" ] || [ "$MDB_MOVIE_JSON" = "null" ]; then
+        log_warn "MDBList API returned empty JSON for TMDB_ID=${TMDB_ID}"
+        MDB_MOVIE_JSON="{}"
+    fi
+}
+
 # 功能: 判断是否重复
 # Function: Check if TMDB ID is already sent
 is_duplicate() {
@@ -350,21 +362,22 @@ get_tmdb_info() {
 # Function: Fetch IMDb, Letterboxd, Metacritic, RogerEbert, average scores
 get_ratings() {
     TMDB_ID="$1"
-    RATING_IMDB=$(curl -s -A "$UA_STRING" -X POST "https://api.mdblist.com/rating/movie/imdb?apikey=${MDBLIST_API_KEY}" \
-        -H "Content-Type: application/json" \
-        -d "{ \"ids\": [${TMDB_ID}], \"provider\": \"tmdb\" }" | jq -r '.ratings[0].rating // "N/A"')
-    RATING_LETTERBOXD=$(curl -s -A "$UA_STRING" -X POST "https://api.mdblist.com/rating/movie/letterboxd?apikey=${MDBLIST_API_KEY}" \
-        -H "Content-Type: application/json" \
-        -d "{ \"ids\": [${TMDB_ID}], \"provider\": \"tmdb\" }" | jq -r '.ratings[0].rating // "N/A"')
-    RATING_METACRITIC=$(curl -s -A "$UA_STRING" -X POST "https://api.mdblist.com/rating/movie/metacritic?apikey=${MDBLIST_API_KEY}" \
-        -H "Content-Type: application/json" \
-        -d "{ \"ids\": [${TMDB_ID}], \"provider\": \"tmdb\" }" | jq -r '.ratings[0].rating // "N/A"')
-    RATING_ROGEREBERT=$(curl -s -A "$UA_STRING" -X POST "https://api.mdblist.com/rating/movie/rogerebert?apikey=${MDBLIST_API_KEY}" \
-        -H "Content-Type: application/json" \
-        -d "{ \"ids\": [${TMDB_ID}], \"provider\": \"tmdb\" }" | jq -r '.ratings[0].rating // "N/A"')
-    AVG_SCORE=$(curl -s -A "$UA_STRING" -X POST "https://api.mdblist.com/rating/movie/score_average?apikey=${MDBLIST_API_KEY}" \
-        -H "Content-Type: application/json" \
-        -d "{ \"ids\": [\"${TMDB_ID}\"], \"provider\": \"tmdb\" }" | jq -r '.ratings[0].rating // "N/A"')
+
+    RATING_IMDB=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="imdb") | .value // "N/A"')
+    RATING_IMDB_COUNT=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="imdb") | .votes // "N/A"')
+
+    RATING_LETTERBOXD=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="letterboxd") | .value // "N/A"')
+    RATING_LETTERBOXD_COUNT=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="letterboxd") | .votes // "N/A"')
+
+    RATING_METACRITIC=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="metacritic") | .value // "N/A"')
+    RATING_METACRITIC_COUNT=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="metacritic") | .votes // "N/A"')
+
+    RATING_ROGEREBERT=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="rogerebert") | .value // "N/A"')
+
+    RATING_ROTTEN=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="tomatoes") | .value // "N/A"')
+    RATING_ROTTEN_COUNT=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="tomatoes") | .votes // "N/A"')
+
+    AVG_SCORE=$(echo "$MDB_MOVIE_JSON" | jq -r '.score_average // "N/A"')
 }
 
 # ---------------- 消息生成与发送 / Message Generation and Sending ----------------
@@ -399,9 +412,28 @@ generate_and_send_msg() {
     [ ${#OVERVIEW} -gt $MAX_OVERVIEW_LEN ] && OVERVIEW="${OVERVIEW:0:$MAX_OVERVIEW_LEN}..."
 
     # 获取上映日期 / Get release date
-    MDB_MOVIE_JSON=$(curl -s -A "$UA_STRING" "https://api.mdblist.com/tmdb/movie/${TMDB_ID}?apikey=${MDBLIST_API_KEY}&append_to_response=keyword&format=json")
     RELEASED_CINEMA=$(echo "$MDB_MOVIE_JSON" | jq -r '.released // "未定"')
     RELEASED_DIGITAL=$(echo "$MDB_MOVIE_JSON" | jq -r '.released_digital // "未上线"')
+
+    # 获取数字发行日期 / Get digital release date
+    RELEASE_DATE="$(echo "$MDB_MOVIE_JSON" | jq -r '.released_digital')"
+
+    if [ -z "$RELEASE_DATE" ] || [ "$RELEASE_DATE" = "null" ]; then
+        RELEASE_STATUS="上映日期未知"
+    else
+        TODAY_TS=$(date -u +%s)
+        RELEASE_TS=$(date -u -d "$RELEASE_DATE" +%s 2>/dev/null)
+        if [ -z "$RELEASE_TS" ]; then
+            RELEASE_STATUS="上映日期无效"
+        else
+            DIFF=$(( (RELEASE_TS - TODAY_TS) / 86400 ))
+            if [ "$DIFF" -le 0 ]; then
+                RELEASE_STATUS="已上线"
+            else
+                RELEASE_STATUS="即将 ${DIFF} 天后上线"
+            fi
+        fi
+    fi
 
     # 获取电影语言 / Get spoken languages
     LANGS="$(echo "$TMDB_JSON" | jq -r '.spoken_languages[].iso_639_1')"
@@ -468,6 +500,7 @@ generate_and_send_msg() {
     RATING_LETTERBOXD_F="$(format_score "$RATING_LETTERBOXD" "letterboxd")"
     RATING_METACRITIC_F="$(format_score "$RATING_METACRITIC" "metacritic")"
     RATING_ROGEREBERT_F="$(format_score "$RATING_ROGEREBERT" "rogerebert")"
+    RATING_ROTTEN_F="$(format_score "$RATING_ROTTEN" "rotten")"
     AVG_SCORE_F="$(format_score "$AVG_SCORE" "avg")"
 
     # 构造 IMDb 链接 / Construct IMDb URL
@@ -506,7 +539,7 @@ generate_and_send_msg() {
     fi
 
     # 将所有信息拼接为一条消息 / Combine all info into one message
-    MSG="$DISPLAY_TITLE（$RELEASE_YEAR） 已上线
+    MSG="$DISPLAY_TITLE（$RELEASE_YEAR） $RELEASE_STATUS
 
 简介：$OVERVIEW
 
@@ -521,8 +554,8 @@ generate_and_send_msg() {
 在线发行：$ONLINE_STREAMS
 
 综合评分：$AVG_SCORE_F
-网友评分：IMDb $RATING_IMDB_F | Letterboxd $RATING_LETTERBOXD_F
-专业评分：Metacritic $RATING_METACRITIC_F | RogerEbert $RATING_ROGEREBERT_F
+网友评分：IMDb $RATING_IMDB_F ($RATING_IMDB_COUNT) | Letterboxd $RATING_LETTERBOXD_F ($RATING_LETTERBOXD_COUNT)
+专业评分：Metacritic $RATING_METACRITIC_F ($RATING_METACRITIC_COUNT) | Rotten Tomatoes $RATING_ROTTEN ($RATING_ROTTEN_COUNT) | RogerEbert $RATING_ROGEREBERT_F
 
 外部资料：$DB_URL
 $TAGS"
@@ -585,6 +618,7 @@ fi
 for TMDB_ID in $(echo "$MOVIE_ITEMS_JSON" | jq -r '.[].id'); do
     if ! is_duplicate "$TMDB_ID"; then
         get_tmdb_info "$TMDB_ID"
+        get_mdb_movie_info "$TMDB_ID"
         get_ratings "$TMDB_ID"
         generate_and_send_msg
         NOW_TS=$(date +%s)
