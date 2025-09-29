@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Name: film_notify_bot.sh
-# Version: 1.9
+# Version: 1.9.1
 # Organization: MontageSubs (蒙太奇字幕组)
 # Contributors: Meow P (小p)
 # License: MIT License
@@ -248,17 +248,45 @@ format_score() {
             imdb) echo "$SCORE / 10" ;;
             letterboxd) echo "$SCORE / 5" ;;
             metacritic) echo "$SCORE / 100" ;;
-            rogerebert) echo "$SCORE / 4" ;;
             rotten) echo "$SCORE / 100" ;;
+            rogerebert) echo "$SCORE / 4" ;;
             avg) echo "$SCORE / 100" ;;
             *) echo "$SCORE" ;;
         esac
     fi
 }
 
+# 功能: 格式化评分，支持不同来源
+# Function: Format score according to provider
+format_count() {
+    if [ -z "$1" ] || [ "$1" = "N/A" ]; then
+        echo "暂无"
+    else
+        echo "$1" | awk '{
+            n = $0
+            if(n == "") { print "0"; exit }
+            sign = ""
+            if(n ~ /^-/) { sign = "-"; n = substr(n, 2) }
+
+            split(n, parts, ".")
+            intpart = parts[1]
+            fracpart = (length(parts) > 1) ? "." parts[2] : ""
+
+            s = ""
+            while(length(intpart) > 3) {
+                s = "," substr(intpart, length(intpart)-2, 3) s
+                intpart = substr(intpart, 1, length(intpart)-3)
+            }
+            print sign intpart s fracpart
+        }'
+    fi
+}
+
+# 功能: 发送消息到 Telegram，支持可选按钮
+# Function: Send message to Telegram, supports optional button
 send_telegram() {
     MSG="$1"
-    MSG_ESCAPED="$(jq -R -s <<< "$MSG")"
+    MSG_ESCAPED=$(echo "$MSG" | jq -R -s .)
 
     for CHAT_ID in $TELEGRAM_CHAT_IDS; do
         [ -z "$CHAT_ID" ] && continue
@@ -363,21 +391,21 @@ get_tmdb_info() {
 get_ratings() {
     TMDB_ID="$1"
 
-    RATING_IMDB=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="imdb") | .value // "N/A"')
-    RATING_IMDB_COUNT=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="imdb") | .votes // "N/A"')
+    RATING_IMDB_RAW=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="imdb") | .value // "N/A"')
+    RATING_IMDB_COUNT_RAW=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="imdb") | .votes // "N/A"')
 
-    RATING_LETTERBOXD=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="letterboxd") | .value // "N/A"')
-    RATING_LETTERBOXD_COUNT=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="letterboxd") | .votes // "N/A"')
+    RATING_LETTERBOXD_RAW=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="letterboxd") | .value // "N/A"')
+    RATING_LETTERBOXD_COUNT_RAW=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="letterboxd") | .votes // "N/A"')
 
-    RATING_METACRITIC=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="metacritic") | .value // "N/A"')
-    RATING_METACRITIC_COUNT=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="metacritic") | .votes // "N/A"')
+    RATING_METACRITIC_RAW=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="metacritic") | .value // "N/A"')
+    RATING_METACRITIC_COUNT_RAW=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="metacritic") | .votes // "N/A"')
 
-    RATING_ROGEREBERT=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="rogerebert") | .value // "N/A"')
+    RATING_ROTTEN_RAW=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="tomatoes") | .value // "N/A"')
+    RATING_ROTTEN_COUNT_RAW=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="tomatoes") | .votes // "N/A"')
 
-    RATING_ROTTEN=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="tomatoes") | .value // "N/A"')
-    RATING_ROTTEN_COUNT=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="tomatoes") | .votes // "N/A"')
+    RATING_ROGEREBERT_RAW=$(echo "$MDB_MOVIE_JSON" | jq -r '.ratings[] | select(.source=="rogerebert") | .value // "N/A"')
 
-    AVG_SCORE=$(echo "$MDB_MOVIE_JSON" | jq -r '.score_average // "N/A"')
+    AVG_SCORE_RAW=$(echo "$MDB_MOVIE_JSON" | jq -r '.score_average // "N/A"')
 }
 
 # ---------------- 消息生成与发送 / Message Generation and Sending ----------------
@@ -387,6 +415,9 @@ generate_and_send_msg() {
     # 获取中文和英文电影标题 / Get movie titles in Chinese and English
     TITLE_CN="$(echo "$TMDB_JSON" | jq -r '.title')"
     TITLE_EN="$(echo "$TMDB_JSON" | jq -r '.original_title')"
+    if [ "$TITLE_CN" = "$TITLE_EN" ]; then
+        TITLE_CN=""
+    fi
 
     # 构造标题显示 / Build display title
     if [ -n "$TITLE_CN" ] && [ "$TITLE_CN" != "null" ]; then
@@ -423,6 +454,9 @@ generate_and_send_msg() {
     else
         TODAY_TS=$(date -u +%s)
         RELEASE_TS=$(date -u -d "$RELEASE_DATE" +%s 2>/dev/null)
+        if [ -z "$RELEASE_TS" ]; then
+            RELEASE_TS=$(date -j -f "%Y-%m-%d" "$RELEASE_DATE" +"%s" 2>/dev/null)
+        fi
         if [ -z "$RELEASE_TS" ]; then
             RELEASE_STATUS="上映日期无效"
         else
@@ -496,12 +530,16 @@ generate_and_send_msg() {
     [ -z "$ONLINE_STREAMS" ] && ONLINE_STREAMS="暂无上线信息"
 
     # 将各类评分格式化显示 / Format different scores
-    RATING_IMDB_F="$(format_score "$RATING_IMDB" "imdb")"
-    RATING_LETTERBOXD_F="$(format_score "$RATING_LETTERBOXD" "letterboxd")"
-    RATING_METACRITIC_F="$(format_score "$RATING_METACRITIC" "metacritic")"
-    RATING_ROGEREBERT_F="$(format_score "$RATING_ROGEREBERT" "rogerebert")"
-    RATING_ROTTEN_F="$(format_score "$RATING_ROTTEN" "rotten")"
-    AVG_SCORE_F="$(format_score "$AVG_SCORE" "avg")"
+    RATING_IMDB="$(format_score "$RATING_IMDB_RAW" "imdb")"
+    RATING_IMDB_COUNT=$(format_count "$RATING_IMDB_COUNT_RAW")
+    RATING_LETTERBOXD="$(format_score "$RATING_LETTERBOXD_RAW" "letterboxd")"
+    RATING_LETTERBOXD_COUNT=$(format_count "$RATING_LETTERBOXD_COUNT_RAW")
+    RATING_METACRITIC="$(format_score "$RATING_METACRITIC_RAW" "metacritic")"
+    RATING_METACRITIC_COUNT=$(format_count "$RATING_METACRITIC_COUNT_RAW")
+    RATING_ROTTEN="$(format_score "$RATING_ROTTEN_RAW" "rotten")"
+    RATING_ROTTEN_COUNT=$(format_count "$RATING_ROTTEN_COUNT_RAW")
+    RATING_ROGEREBERT="$(format_score "$RATING_ROGEREBERT_RAW" "rogerebert")"
+    AVG_SCORE="$(format_score "$AVG_SCORE_RAW" "avg")"
 
     # 构造 IMDb 链接 / Construct IMDb URL
     IMDB_ID="$(echo "$TMDB_JSON" | jq -r '.imdb_id')"
@@ -553,9 +591,9 @@ generate_and_send_msg() {
 制作公司：$COMPANIES_CN
 在线发行：$ONLINE_STREAMS
 
-综合评分：$AVG_SCORE_F
-网友评分：IMDb $RATING_IMDB_F ($RATING_IMDB_COUNT) | Letterboxd $RATING_LETTERBOXD_F ($RATING_LETTERBOXD_COUNT)
-专业评分：Metacritic $RATING_METACRITIC_F ($RATING_METACRITIC_COUNT) | Rotten Tomatoes $RATING_ROTTEN ($RATING_ROTTEN_COUNT) | RogerEbert $RATING_ROGEREBERT_F
+综合评分：$AVG_SCORE
+网友评分：IMDb $RATING_IMDB ($RATING_IMDB_COUNT) | Letterboxd $RATING_LETTERBOXD ($RATING_LETTERBOXD_COUNT)
+专业评分：Metacritic $RATING_METACRITIC ($RATING_METACRITIC_COUNT) | Rotten Tomatoes $RATING_ROTTEN ($RATING_ROTTEN_COUNT) | RogerEbert $RATING_ROGEREBERT
 
 外部资料：$DB_URL
 $TAGS"
