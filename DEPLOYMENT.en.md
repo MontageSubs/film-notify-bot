@@ -184,7 +184,7 @@ Never write API Keys or Bot Tokens into the code repository. Only store them in 
 
 ## Part 4: Local / Private Server Deployment
 
-> This step is only necessary if you're not using GitHub Actions and wish to host it locally or on your own server.
+> This part is only necessary if you're not using GitHub Actions and wish to host it locally or on your own server.
 
 1. **System dependencies**
 
