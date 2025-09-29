@@ -42,8 +42,8 @@
 在线发行：Blender Open Movie
 
 综合评分：61 / 100
-网友评分：IMDb 6.8 / 10 | Letterboxd 3.3 / 5
-专业评分：Metacritic 暂无 | RogerEbert 暂无
+网友评分：IMDb 6.8 / 10 (1,178) | Letterboxd 3.3 / 5 (3,599)
+专业评分：Metacritic 暂无 | Rotten Tomatoes 暂无 | RogerEbert 暂无
 
 IMDb：https://www.imdb.com/title/tt4957236/
 #宇宙自助洗衣店 #CosmosLaundromat
