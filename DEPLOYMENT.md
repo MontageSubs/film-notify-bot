@@ -205,7 +205,7 @@ MDBLIST_LIST_ID="123456"
 TMDB_API_KEY="abcdefg"
 TELEGRAM_BOT_TOKEN="1234:abcd"
 TELEGRAM_CHAT_IDS="12345 -100112233"
-TELEGRAM_BUTTON_URL="https://example.com"
+TELEGRAM_BUTTON_URL="https://example.com"  # 可选
 ```
 
 4. **运行脚本**
