@@ -32,7 +32,7 @@ This document provides a complete deployment guide for Film Notify Bot, includin
 * **Telegram Bot**: Sends notifications to target groups or channels.
 * **sent_tmdb_ids.txt**: Tracks already sent movie IDs to avoid duplicates.
 * **GitHub Actions**: Cloud-based runner for automated tasks.
-* **API Key / Token**: Sensitive credential proving identity when requesting services. Treat these as passwords and protect carefully.
+* **API Key / Token**: Credentials used to authenticate requests to services. These are sensitive credentials and should be protected like passwords.
 * **Film Notify Bot**: Automatically checks MDBList/TMDB lists and pushes new movie notifications via Telegram. See [README.en.md](./README.en.md) for details.
 
 ## Deployment Steps Overview
@@ -140,7 +140,7 @@ curl -s -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage" \
 5. **Optional: Manual run**: Actions → Film Notify Bot → **Run workflow**.
 6. **Optional: Stagger schedule**: Edit [`.github/workflows/film_notify_bot.yml`](.github/workflows/film_notify_bot.yml), change `- cron: '43 */6 * * *'` `43` to any number between 1–59.
 
-    > This avoids simultaneous requests from all forks at the hour mark, reducing load on API providers.
+    > Changing the cron minute avoids multiple forks sending requests at the same time, reducing load on API servers.
 
 ### Security Reminder
 
@@ -170,7 +170,7 @@ TELEGRAM_CHAT_IDS="12345 -100112233"
 TELEGRAM_BUTTON_URL="https://example.com"  # Optional
 ```
 
-  > Security reminder: only write sensitive keys in safe environments, and protect file permissions.
+  > Security reminder: only store sensitive keys in secure environments and protect file permissions.
 
 4. **Run script**
 
@@ -210,7 +210,7 @@ bash film_notify_bot.sh
      `User-Agent: film_notify_bot/1.8.4 (+https://github.com/MontageSubs/film-notify-bot; GitHub Actions)`
    * On GitHub Actions: includes "GitHub Actions" and repo source.
    * Local/private server: includes OS and version (e.g., `Ubuntu-22.04`, `Darwin-23.0.0`).
-   * Purpose: to help API providers identify traffic and debug issues, and to encourage responsible use of their services.
+   * The purpose is to help API providers identify traffic and debug issues, and to encourage responsible use of their services.
 
 ---
 
