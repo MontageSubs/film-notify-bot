@@ -32,7 +32,7 @@ This document provides a complete deployment guide for Film Notify Bot, includin
 * **Telegram Bot**: Sends notifications to target groups or channels.
 * **sent_tmdb_ids.txt**: Tracks already sent movie IDs to avoid duplicates.
 * **GitHub Actions**: GitHub’s hosted CI/CD service, used to run scheduled or manual workflows.
-* **API Key / Token**: Credentials used to authenticate requests to services. These are sensitive credentials and should be protected like passwords.
+* **API Key / Token**: Credentials used to authenticate requests to services (MDBList, TMDB, Telegram). These are sensitive credentials and should be protected like passwords.
 * **Film Notify Bot**: Automatically checks MDBList/TMDB lists and pushes new movie notifications via Telegram. See [README.en.md](./README.en.md) for details.
 
 ## Deployment Steps Overview
