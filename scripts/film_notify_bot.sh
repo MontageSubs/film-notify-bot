@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Name: film_notify_bot.sh
-# Version: 1.9.9
+# Version: 1.9.10
 # Organization: MontageSubs (蒙太奇字幕组)
 # Contributors: Meow P (小p)
 # License: MIT License
@@ -388,7 +388,7 @@ check_dependencies() {
 get_movie_list() {
 if [ "$OFFICIAL_REPO" -eq 1 ]; then
     RAW_HTML="$(curl -s \
-    -A "Mozilla/5.0 (X11; Linux i686; rv:143.0) Gecko/20100101 Firefox/143.0" \
+    -A "$UA_STRING" \
     -H "Referer: https://mdblist.com/" \
     -H "Accept-Language: en-US,en;q=0.9" \
     "${MDBLIST_SOURCE_URL}")"
