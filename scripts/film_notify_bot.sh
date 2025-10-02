@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Name: film_notify_bot.sh
-# Version: 1.9.6
+# Version: 1.9.7
 # Organization: MontageSubs (蒙太奇字幕组)
 # Contributors: Meow P (小p)
 # License: MIT License
@@ -378,7 +378,7 @@ if [ "$OFFICIAL_REPO" -eq 1 ]; then
             fi
         fi
     done <<EOF
-"$RAW_HTML"
+$RAW_HTML
 EOF
 
     MOVIE_ITEMS_JSON=$(echo "$MOVIE_ITEMS_JSON" | sed 's/,$//')
