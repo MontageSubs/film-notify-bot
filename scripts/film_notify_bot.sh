@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Name: film_notify_bot.sh
-# Version: 1.9.3
+# Version: 1.9.4
 # Organization: MontageSubs (蒙太奇字幕组)
 # Contributors: Meow P (小p)
 # License: MIT License
@@ -361,7 +361,32 @@ check_dependencies() {
 # 功能: 获取今日电影列表
 # Function: Fetch today's movie list from MDBList
 get_movie_list() {
-    MOVIE_ITEMS_JSON=$(curl -s -A "$UA_STRING" "https://api.mdblist.com/lists/${MDBLIST_LIST_ID}/items?apikey=${MDBLIST_API_KEY}&format=json&limit=100&order=asc&sort=releasedigital&unified=true")
+if [ "$OFFICIAL_REPO" -eq 1 ]; then
+    RAW_HTML="$(curl -s \
+    -A "Mozilla/5.0 (X11; Linux i686; rv:143.0) Gecko/20100101 Firefox/143.0" \
+    -H "Referer: https://mdblist.com/" \
+    -H "Accept-Language: en-US,en;q=0.9" \
+    "${MDBLIST_SOURCE_URL}")"
+
+    MOVIE_ITEMS_JSON="$(echo "$RAW_HTML" \
+      | grep -oP 'https://www.themoviedb.org/movie/\K[0-9]+' -A1 --no-group-separator \
+      | paste - - \
+      | while read -r tmdb imdb; do
+            imdb_id=$(echo "$imdb" | grep -oP 'tt[0-9]+')
+            if [ -n "$tmdb" ] && [ -n "$imdb_id" ]; then
+                echo "{\"id\":$tmdb,\"imdb_id\":\"$imdb_id\"},"
+            fi
+       done \
+      | sed '$ s/,$//')"
+
+    [ -n "$MOVIE_ITEMS_JSON" ] && MOVIE_ITEMS_JSON="[$MOVIE_ITEMS_JSON]" || MOVIE_ITEMS_JSON=""
+fi
+
+if [ -z "$MOVIE_ITEMS_JSON" ]; then
+    echo "Using MDBList API..."
+    MOVIE_ITEMS_JSON=$(curl -s -A "$UA_STRING" \
+      "https://api.mdblist.com/lists/${MDBLIST_LIST_ID}/items?apikey=${MDBLIST_API_KEY}&format=json&limit=100&order=asc&sort=releasedigital&unified=true")
+fi
 }
 
 get_mdb_movie_info() {
@@ -628,10 +653,14 @@ clean_old_dedup() {
 # ---------------- 主流程 / Main Flow ----------------
 # 从脚本头部获取版本号 / Get script version from header
 VERSION="$(grep -m1 '^# Version:' "$0" | awk '{print $3}')"
+OFFICIAL_REPO=0
 # 根据运行环境动态设置 Source 和 UserAgent / Set SOURCE_URL and UA_STRING dynamically based on environment
 if [ -n "$GITHUB_REPOSITORY" ]; then
     SOURCE_URL="https://github.com/${GITHUB_REPOSITORY}"
     UA_STRING="film_notify_bot/$VERSION (+$SOURCE_URL; GitHub Actions)"
+    if [ "$GITHUB_REPOSITORY" = "MontageSubs/film-notify-bot" ]; then
+        OFFICIAL_REPO=1
+    fi
 else
     if [ -f /etc/os-release ]; then
         . /etc/os-release
@@ -649,6 +678,7 @@ check_tokens
 clean_old_dedup
 get_movie_list
 
+log_info "$MOVIE_ITEMS_JSON" # debug
 MOVIE_COUNT=$(echo "$MOVIE_ITEMS_JSON" | jq 'length')
 if [ "$MOVIE_COUNT" -eq 0 ]; then
     log_info "今日无新电影，脚本退出 / No new movies today, exiting."
