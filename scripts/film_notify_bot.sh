@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Name: film_notify_bot.sh
-# Version: 1.9.7
+# Version: 1.9.8
 # Organization: MontageSubs (蒙太奇字幕组)
 # Contributors: Meow P (小p)
 # License: MIT License
@@ -367,22 +367,22 @@ if [ "$OFFICIAL_REPO" -eq 1 ]; then
     -H "Referer: https://mdblist.com/" \
     -H "Accept-Language: en-US,en;q=0.9" \
     "${MDBLIST_SOURCE_URL}")"
-    MOVIE_ITEMS_JSON="["
-    while IFS= read -r line; do
-        tmdb=$(echo "$line" | grep -o 'https://www.themoviedb.org/movie/[0-9]\+' | sed 's|https://www.themoviedb.org/movie/||')
-        if [ -n "$tmdb" ]; then
-            read -r imdb_line
-            imdb=$(echo "$imdb_line" | grep -o 'https://www.imdb.com/title/tt[0-9]\+' | sed 's|https://www.imdb.com/title/||')
-            if [ -n "$imdb" ]; then
-                MOVIE_ITEMS_JSON="$MOVIE_ITEMS_JSON{\"id\":$tmdb,\"imdb_id\":\"$imdb\"},"
-            fi
-        fi
-    done <<EOF
-$RAW_HTML
-EOF
 
-    MOVIE_ITEMS_JSON=$(echo "$MOVIE_ITEMS_JSON" | sed 's/,$//')
-    MOVIE_ITEMS_JSON="$MOVIE_ITEMS_JSON]"
+    MOVIE_ITEMS_JSON="$(echo "$RAW_HTML" | sed -n 's/.*https:\/\/www\.themoviedb\.org\/movie\/\([0-9]\+\).*/\1/p' > /tmp/tmdb_ids.txt)"
+    echo "$RAW_HTML" | sed -n 's/.*https:\/\/www\.imdb\.com\/title\/\(tt[0-9]\+\).*/\1/p' > /tmp/imdb_ids.txt
+
+    MOVIE_ITEMS_JSON=""
+    count=$(wc -l < /tmp/tmdb_ids.txt)
+    for i in $(seq 1 $count); do
+        tmdb=$(sed -n "${i}p" /tmp/tmdb_ids.txt)
+        imdb=$(sed -n "${i}p" /tmp/imdb_ids.txt)
+        if [ -n "$tmdb" ] && [ -n "$imdb" ]; then
+            MOVIE_ITEMS_JSON="$MOVIE_ITEMS_JSON{\"id\":$tmdb,\"imdb_id\":\"$imdb\"},"
+        fi
+    done
+    MOVIE_ITEMS_JSON=$(echo "[$(echo "$MOVIE_ITEMS_JSON" | sed 's/,$//')]")
+    rm -f /tmp/imdb_ids.txt /tmp/tmdb_ids.txt
+fi
 
 if [ -z "$MOVIE_ITEMS_JSON" ]; then
     echo "Using MDBList API..."
