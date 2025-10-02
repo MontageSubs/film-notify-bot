@@ -410,7 +410,6 @@ if [ "$OFFICIAL_REPO" -eq 1 ]; then
 fi
 
 if [ -z "$MOVIE_ITEMS_JSON" ]; then
-    echo "Using MDBList API..."
     MOVIE_ITEMS_JSON=$(curl -s -A "$UA_STRING" \
       "https://api.mdblist.com/lists/${MDBLIST_LIST_ID}/items?apikey=${MDBLIST_API_KEY}&format=json&limit=100&order=asc&sort=releasedigital&unified=true")
 fi
