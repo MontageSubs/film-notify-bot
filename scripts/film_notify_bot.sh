@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Name: film_notify_bot.sh
-# Version: 1.9.10
+# Version: 1.9.3
 # Organization: MontageSubs (蒙太奇字幕组)
 # Contributors: Meow P (小p)
 # License: MIT License
@@ -80,54 +80,34 @@ log_error() { printf "[ERROR] %s\n" "$1" >&2; }     # 错误信息 / Error
 # ---------------- 语言映射 / Language Mapping ----------------
 # 功能: 将 TMDB ISO 语言代码转换为中文描述
 # Function: Convert TMDB ISO language code to Chinese name
- lang_map() {
+lang_map() {
     case "$1" in
-        af) echo "南非语" ;;
         ar) echo "阿拉伯语" ;;
         as) echo "阿萨姆语" ;;
-        be) echo "白俄罗斯语" ;;
         bg) echo "保加利亚语" ;;
         bn) echo "孟加拉语" ;;
-        bs) echo "波斯尼亚语" ;;
-        ca) echo "加泰罗尼亚语" ;;
         cs) echo "捷克语" ;;
-        cy) echo "威尔士语" ;;
         da) echo "丹麦语" ;;
         de) echo "德语" ;;
         el) echo "希腊语" ;;
         en) echo "英语" ;;
         es) echo "西班牙语" ;;
-        et) echo "爱沙尼亚语" ;;
-        eu) echo "巴斯克语" ;;
         fa) echo "波斯语" ;;
         fi) echo "芬兰语" ;;
         fr) echo "法语" ;;
-        ga) echo "爱尔兰语" ;;
-        gl) echo "加利西亚语" ;;
         gu) echo "古吉拉特语" ;;
         he) echo "希伯来语" ;;
         hi) echo "印地语" ;;
         hr) echo "克罗地亚语" ;;
         hu) echo "匈牙利语" ;;
-        hy) echo "亚美尼亚语" ;;
         id) echo "印尼语" ;;
         is) echo "冰岛语" ;;
         it) echo "意大利语" ;;
         ja) echo "日语" ;;
-        jv) echo "爪哇语" ;;
         kn) echo "卡纳达语" ;;
-        kk) echo "哈萨克语" ;;
         ko) echo "韩语" ;;
-        ku) echo "库尔德语" ;;
-        la) echo "拉丁语" ;;
-        lt) echo "立陶宛语" ;;
-        lv) echo "拉脱维亚语" ;;
         ml) echo "马拉雅拉姆语" ;;
-        mn) echo "蒙古语" ;;
         mr) echo "马拉地语" ;;
-        ms) echo "马来语" ;;
-        mt) echo "马耳他语" ;;
-        ne) echo "尼泊尔语" ;;
         nl) echo "荷兰语" ;;
         no) echo "挪威语" ;;
         or) echo "奥里亚语" ;;
@@ -137,22 +117,17 @@ log_error() { printf "[ERROR] %s\n" "$1" >&2; }     # 错误信息 / Error
         ro) echo "罗马尼亚语" ;;
         ru) echo "俄语" ;;
         sa) echo "梵语" ;;
-        si) echo "僧伽罗语" ;;
         sk) echo "斯洛伐克语" ;;
         sl) echo "斯洛文尼亚语" ;;
         sr) echo "塞尔维亚语" ;;
-        sw) echo "斯瓦希里语" ;;
         sv) echo "瑞典语" ;;
         ta) echo "泰米尔语" ;;
-        tg) echo "塔吉克语" ;;
         te) echo "泰卢固语" ;;
         th) echo "泰语" ;;
         tr) echo "土耳其语" ;;
         uk) echo "乌克兰语" ;;
         ur) echo "乌尔都语" ;;
-        uz) echo "乌兹别克语" ;;
         vi) echo "越南语" ;;
-        yi) echo "意第绪语" ;;
         zh) echo "中文" ;;
         *) echo "$1" ;;
     esac
@@ -386,33 +361,7 @@ check_dependencies() {
 # 功能: 获取今日电影列表
 # Function: Fetch today's movie list from MDBList
 get_movie_list() {
-if [ "$OFFICIAL_REPO" -eq 1 ]; then
-    RAW_HTML="$(curl -s \
-    -A "$UA_STRING" \
-    -H "Referer: https://mdblist.com/" \
-    -H "Accept-Language: en-US,en;q=0.9" \
-    "${MDBLIST_SOURCE_URL}")"
-
-    MOVIE_ITEMS_JSON="$(echo "$RAW_HTML" | sed -n 's/.*https:\/\/www\.themoviedb\.org\/movie\/\([0-9]\+\).*/\1/p' > /tmp/tmdb_ids.txt)"
-    echo "$RAW_HTML" | sed -n 's/.*https:\/\/www\.imdb\.com\/title\/\(tt[0-9]\+\).*/\1/p' > /tmp/imdb_ids.txt
-
-    MOVIE_ITEMS_JSON=""
-    count=$(wc -l < /tmp/tmdb_ids.txt)
-    for i in $(seq 1 $count); do
-        tmdb=$(sed -n "${i}p" /tmp/tmdb_ids.txt)
-        imdb=$(sed -n "${i}p" /tmp/imdb_ids.txt)
-        if [ -n "$tmdb" ] && [ -n "$imdb" ]; then
-            MOVIE_ITEMS_JSON="$MOVIE_ITEMS_JSON{\"id\":$tmdb,\"imdb_id\":\"$imdb\"},"
-        fi
-    done
-    MOVIE_ITEMS_JSON=$(echo "[$(echo "$MOVIE_ITEMS_JSON" | sed 's/,$//')]")
-    rm -f /tmp/imdb_ids.txt /tmp/tmdb_ids.txt
-fi
-
-if [ -z "$MOVIE_ITEMS_JSON" ]; then
-    MOVIE_ITEMS_JSON=$(curl -s -A "$UA_STRING" \
-      "https://api.mdblist.com/lists/${MDBLIST_LIST_ID}/items?apikey=${MDBLIST_API_KEY}&format=json&limit=100&order=asc&sort=releasedigital&unified=true")
-fi
+    MOVIE_ITEMS_JSON=$(curl -s -A "$UA_STRING" "https://api.mdblist.com/lists/${MDBLIST_LIST_ID}/items?apikey=${MDBLIST_API_KEY}&format=json&limit=100&order=asc&sort=releasedigital&unified=true")
 }
 
 get_mdb_movie_info() {
@@ -493,7 +442,6 @@ generate_and_send_msg() {
         if [ -z "$OVERVIEW" ] || [ "$OVERVIEW" = "null" ]; then
         OVERVIEW="暂无简介"
     fi
-    OVERVIEW=$(echo "$OVERVIEW" | sed 's/^[[:space:]　]\+//')
     [ ${#OVERVIEW} -gt $MAX_OVERVIEW_LEN ] && OVERVIEW="${OVERVIEW:0:$MAX_OVERVIEW_LEN}..."
 
     # 获取上映日期 / Get release date
@@ -680,14 +628,10 @@ clean_old_dedup() {
 # ---------------- 主流程 / Main Flow ----------------
 # 从脚本头部获取版本号 / Get script version from header
 VERSION="$(grep -m1 '^# Version:' "$0" | awk '{print $3}')"
-OFFICIAL_REPO=0
 # 根据运行环境动态设置 Source 和 UserAgent / Set SOURCE_URL and UA_STRING dynamically based on environment
 if [ -n "$GITHUB_REPOSITORY" ]; then
     SOURCE_URL="https://github.com/${GITHUB_REPOSITORY}"
     UA_STRING="film_notify_bot/$VERSION (+$SOURCE_URL; GitHub Actions)"
-    if [ "$GITHUB_REPOSITORY" = "MontageSubs/film-notify-bot" ]; then
-        OFFICIAL_REPO=1
-    fi
 else
     if [ -f /etc/os-release ]; then
         . /etc/os-release
