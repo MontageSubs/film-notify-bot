@@ -18,6 +18,7 @@ jobs:
     env:
       MDBLIST_API_KEY: '${{ secrets.MDBLIST_API_KEY }}'          # MDblist API Key
       MDBLIST_LIST_ID: '${{ secrets.MDBLIST_LIST_ID }}'          # Watchlist ID / 监控列表 ID
+      MDBLIST_SOURCE_URL: '${{MDBLIST_SOURCE_URL}}'
       TMDB_API_KEY: '${{ secrets.TMDB_API_KEY }}'                # TMDB API Key
       TELEGRAM_BOT_TOKEN: '${{ secrets.TELEGRAM_BOT_TOKEN }}'    # Telegram Bot Token
       TELEGRAM_CHAT_IDS: '${{ secrets.TELEGRAM_CHAT_IDS }}'      # Target chat IDs (space separated) / 目标聊天 ID，可多个用空格分隔
